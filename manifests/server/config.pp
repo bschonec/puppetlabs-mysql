@@ -83,6 +83,8 @@ class mysql::server::config {
         file { $configparentdir:
           ensure => directory,
           mode   => '0755',
+          recurse => $mysql::server::purge_conf_dir,
+          purge   => $mysql::server::purge_conf_dir,
         }
       }
     }
