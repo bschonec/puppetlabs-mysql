@@ -13,7 +13,7 @@ class mysql::backup::xtrabackup (
   String[1]                                     $backupdirgroup           = $mysql::params::root_group,
   Boolean                                       $backupcompress           = true,
   Variant[Integer, String[1]]                   $backuprotate             = 30,
-  String[1]                                     $backupscript_template    = 'mysql/xtrabackup.sh.erb',
+  String[1]                                     $backupscript_template    = 'mysql/xtrabackup.sh.epp',
   Optional[String[1]]                           $backup_success_file_path = undef,
   Boolean                                       $ignore_events            = true,
   Boolean                                       $delete_before_dump       = false,
@@ -35,7 +35,7 @@ class mysql::backup::xtrabackup (
   String[1]                                     $backupmethod_package     = $mysql::params::xtrabackup_package_name,
   Array[String]                                 $excludedatabases = [],
 ) inherits mysql::params {
-  ensure_packages($backupmethod_package)
+  stdlib::ensure_packages($backupmethod_package)
 
   $backuppassword_unsensitive = if $backuppassword =~ Sensitive {
     $backuppassword.unwrap
@@ -46,7 +46,7 @@ class mysql::backup::xtrabackup (
   if $backupuser and $backuppassword {
     mysql_user { "${backupuser}@localhost":
       ensure        => $ensure,
-      password_hash => mysql::password($backuppassword),
+      password_hash => Deferred('mysql::password', [$backuppassword]),
       require       => Class['mysql::server::root_password'],
     }
     # Percona XtraBackup needs additional grants/privileges to work with MySQL 8
@@ -86,7 +86,7 @@ class mysql::backup::xtrabackup (
       }
     }
     else {
-      if $facts['os']['family'] == 'debian' and $facts['os']['release']['major'] == '11' or
+      if ($facts['os']['name'] == 'debian' and versioncmp($facts['os']['release']['major'], '11') >= 0) or
       ($facts['os']['name'] == 'Ubuntu' and versioncmp($facts['os']['release']['major'], '22.04') >= 0) {
         mysql_grant { "${backupuser}@localhost/*.*":
           ensure     => $ensure,
@@ -110,9 +110,9 @@ class mysql::backup::xtrabackup (
 
   if $install_cron {
     if $facts['os']['family'] == 'RedHat' {
-      ensure_packages('cronie')
+      stdlib::ensure_packages('cronie')
     } elsif $facts['os']['family'] != 'FreeBSD' {
-      ensure_packages('cron')
+      stdlib::ensure_packages('cron')
     }
   }
 
@@ -176,12 +176,23 @@ class mysql::backup::xtrabackup (
   }
 
   # TODO: use EPP instead of ERB, as EPP can handle Data of Type Sensitive without further ado
+  $parameters = {
+    'innobackupex_args' => mysql::innobackupex_args($backupuser, $backupcompress, $backuppassword_unsensitive, $backupdatabases, $optional_args),
+    'backuprotate' => $backuprotate,
+    'backupdir' => $backupdir,
+    'backupmethod' => $backupmethod,
+    'delete_before_dump' => $delete_before_dump,
+    'prescript' => $prescript,
+    'backup_success_file_path'=> $backup_success_file_path,
+    'postscript'=> $postscript,
+  }
+
   file { 'xtrabackup.sh':
     ensure  => $ensure,
     path    => '/usr/local/sbin/xtrabackup.sh',
     mode    => '0700',
     owner   => 'root',
     group   => $mysql::params::root_group,
-    content => template($backupscript_template),
+    content => epp($backupscript_template,$parameters),
   }
 }

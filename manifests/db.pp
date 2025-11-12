@@ -11,8 +11,8 @@
 #
 # @param name
 #   The name of the database to create. Database names must:
-#     * be longer than 64 characters.
-#     * not contain / \ or . characters.
+#     * not be longer than 64 characters.
+#     * not contain '/' '\' or '.' characters.
 #     * not contain characters that are not permitted in file names.
 #     * not end with space characters.
 # @param user
@@ -51,8 +51,8 @@ define mysql::db (
   Variant[String, Sensitive[String]]             $password,
   Optional[Array[String[1]]]                     $tls_options     = undef,
   String                                         $dbname          = $name,
-  String[1]                                      $charset         = 'utf8',
-  String[1]                                      $collate         = 'utf8_general_ci',
+  String[1]                                      $charset         = 'utf8mb3',
+  String[1]                                      $collate         = 'utf8mb3_general_ci',
   String[1]                                      $host            = 'localhost',
   Variant[String[1], Array[String[1]]]           $grant           = 'ALL',
   Optional[Variant[String[1], Array[String[1]]]] $grant_options   = undef,
@@ -68,8 +68,8 @@ define mysql::db (
   # Ensure that the database name is valid.
   if $dbname !~ /^[^\/?%*:|\""<>.\s;]{1,64}$/ {
     $message = "The database name '${dbname}' is invalid. Values must:
-      * be longer than 64 characters.
-      * not contain // \\ or . characters.
+      * not be longer than 64 characters.
+      * not contain '/' '\\' or '.' characters.
       * not contain characters that are not permitted in file names.
       * not end with space characters."
     fail($message)
@@ -102,7 +102,7 @@ define mysql::db (
 
   $user_resource = {
     ensure        => $ensure,
-    password_hash => mysql::password($password),
+    password_hash => Deferred('mysql::password', [$password]),
     tls_options   => $tls_options,
   }
   ensure_resource('mysql_user', "${user}@${host}", $user_resource)

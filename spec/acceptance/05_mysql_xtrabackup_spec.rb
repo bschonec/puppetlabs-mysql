@@ -23,10 +23,10 @@ describe 'mysql::server::backup class with xtrabackup', if: Gem::Version.new(mys
               ensure  => present,
               source  => $source_url,
             }
-            ensure_packages('gnupg')
-            ensure_packages('gnupg2')
-            ensure_packages('curl')
-            ensure_packages('percona-release',{
+            stdlib::ensure_packages('gnupg')
+            stdlib::ensure_packages('gnupg2')
+            stdlib::ensure_packages('curl')
+            stdlib::ensure_packages('percona-release',{
               ensure   => present,
               provider => 'dpkg',
               source   => '/tmp/percona-release_latest.deb',
@@ -40,19 +40,19 @@ describe 'mysql::server::backup class with xtrabackup', if: Gem::Version.new(mys
           /RedHat/: {
             # RHEL/CentOS 5 is no longer supported by Percona, but older versions
             # of the repository are still available.
-            if versioncmp($facts['os']['release']['major'], '6') >= 0 {
+            if versioncmp($facts['os']['release']['major'], '7') >= 0 {
               $percona_url = 'http://repo.percona.com/yum/percona-release-latest.noarch.rpm'
               $epel_url = "https://download.fedoraproject.org/pub/epel/epel-release-latest-${facts['os']['release']['major']}.noarch.rpm"
             } else {
               $percona_url = 'http://repo.percona.com/yum/release/5/os/noarch/percona-release-0.1-3.noarch.rpm'
               $epel_url = 'https://archives.fedoraproject.org/pub/archive/epel/epel-release-latest-5.noarch.rpm'
             }
-            ensure_packages('percona-release',{
+            stdlib::ensure_packages('percona-release',{
               ensure   => present,
               provider => 'rpm',
               source   => $percona_url,
             })
-            ensure_packages('epel-release',{
+            stdlib::ensure_packages('epel-release',{
               ensure   => present,
               provider => 'rpm',
               source   => $epel_url,
@@ -141,9 +141,9 @@ describe 'mysql::server::backup class with xtrabackup', if: Gem::Version.new(mys
               ensure => present,
               source => $source_url,
             }
-            ensure_packages('gnupg')
-            ensure_packages('gnupg2')
-            ensure_packages('percona-release',{
+            stdlib::ensure_packages('gnupg')
+            stdlib::ensure_packages('gnupg2')
+            stdlib::ensure_packages('percona-release',{
               ensure   => present,
               provider => 'dpkg',
               source   => '/tmp/percona-release_latest.deb',
@@ -157,12 +157,12 @@ describe 'mysql::server::backup class with xtrabackup', if: Gem::Version.new(mys
           /RedHat/: {
             $percona_url = 'http://repo.percona.com/yum/percona-release-latest.noarch.rpm'
             $epel_url = "https://download.fedoraproject.org/pub/epel/epel-release-latest-${facts['os']['release']['major']}.noarch.rpm"
-            ensure_packages('percona-release',{
+            stdlib::ensure_packages('percona-release',{
               ensure   => present,
               provider => 'rpm',
               source   => $percona_url,
             })
-            ensure_packages('epel-release',{
+            stdlib::ensure_packages('epel-release',{
               ensure   => present,
               provider => 'rpm',
               source   => $epel_url,

@@ -11,7 +11,7 @@ def mysql_version
   shell_output = LitmusHelper.instance.run_shell('mysql --version', expect_failures: true)
   if shell_output.stdout.match(%r{\d+\.\d+\.\d+}).nil?
     # mysql is not yet installed, so we apply this class to install it
-    LitmusHelper.instance.apply_manifest('include mysql::server', debug: true, catch_failures: true)
+    LitmusHelper.instance.apply_manifest('include mysql::server', catch_failures: true)
     shell_output = LitmusHelper.instance.run_shell('mysql --version')
     raise _('unable to get mysql version') if shell_output.stdout.match(%r{\d+\.\d+\.\d+}).nil?
   end
@@ -36,8 +36,16 @@ def sles_15?
   os[:family] == 'sles' && os[:release].to_i == 15
 end
 
+def debian_12?
+  os[:family] == 'debian' && os[:release].to_i == 12
+end
+
 def charset
-  @charset ||= (ubuntu_2204? || sles_15?) ? 'utf8mb3' : 'utf8'
+  @charset ||= (debian_12? || ubuntu_2204? || sles_15?) ? 'utf8mb3' : 'utf8'
+end
+
+def get_db_cmd
+  run_shell('mariadb -V', expect_failures: true).stdout.empty? ? 'mysql' : 'mariadb'
 end
 
 RSpec.configure do |c|

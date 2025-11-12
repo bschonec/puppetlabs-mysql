@@ -41,8 +41,8 @@ class mysql::server::config {
           $dir = $options['mysqld']["${entry}"]
 
           if ( $dir and $dir != '/usr' and $dir != '/tmp' ) {
-            $clean_dir = shell_escape($dir)
-            $clean_package_name = shell_escape($mysql::server::package_name)
+            $clean_dir = stdlib::shell_escape($dir)
+            $clean_package_name = stdlib::shell_escape($mysql::server::package_name)
 
             exec { "${entry}-managed_dir-mkdir":
               command => ['/bin/mkdir', '-p', $clean_dir],
@@ -61,10 +61,15 @@ class mysql::server::config {
     default: {}
   }
 
+  $parameters= {
+    'options' => $options,
+    'includedir' => $includedir,
+  }
+
   if $mysql::server::manage_config_file {
     file { 'mysql-config-file':
       path                    => $mysql::server::config_file,
-      content                 => template('mysql/my.cnf.erb'),
+      content                 => epp('mysql/my.cnf.epp', $parameters),
       mode                    => $mysql::server::config_file_mode,
       owner                   => $mysql::server::mycnf_owner,
       group                   => $mysql::server::mycnf_group,

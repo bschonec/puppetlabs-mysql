@@ -32,15 +32,21 @@ class mysql::server::root_password {
   if $mysql::server::create_root_user and $root_password_set {
     mysql_user { 'root@localhost':
       ensure        => present,
-      password_hash => mysql::password($mysql::server::root_password),
+      password_hash => Deferred('mysql::password', [$mysql::server::root_password]),
       require       => Exec['remove install pass'],
     }
+  }
+
+  $parameters = {
+    'root_password_set' => $root_password_set,
+    'root_password' => $root_password,
+    'options' => $options,
   }
 
   if $mysql::server::create_root_my_cnf and $root_password_set {
     # TODO: use EPP instead of ERB, as EPP can handle Data of Type Sensitive without further ado
     file { "${facts['root_home']}/.my.cnf":
-      content => template('mysql/my.cnf.pass.erb'),
+      content => epp('mysql/my.cnf.pass.epp',$parameters),
       owner   => 'root',
       mode    => '0600',
     }

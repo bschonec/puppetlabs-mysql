@@ -44,18 +44,19 @@
 
 #### Public Resource types
 
-* [`mysql_grant`](#mysql_grant): @summary Manage a MySQL user's rights.
+* [`mysql_database`](#mysql_database): Manage a MySQL database.
+* [`mysql_grant`](#mysql_grant): Manage a MySQL user's rights.
 * [`mysql_login_path`](#mysql_login_path): Manage a MySQL login path.
 * [`mysql_plugin`](#mysql_plugin): Manage MySQL plugins.
-* [`mysql_user`](#mysql_user): @summary Manage a MySQL user. This includes management of users password as well as privileges.
+* [`mysql_user`](#mysql_user): Manage a MySQL user. This includes management of users password as well as privileges.
 
 #### Private Resource types
 
-* `mysql_database`: Manage a MySQL database.
 * `mysql_datadir`: Manage MySQL datadirs with mysql_install_db OR mysqld (5.7.6 and above).
 
 ### Functions
 
+* [`mysql::innobackupex_args`](#mysql--innobackupex_args): This function populates and returns the string of arguments which later gets injected in template. Arguments that return string holds is conditional and decided by the the input given to function.
 * [`mysql::normalise_and_deepmerge`](#mysql--normalise_and_deepmerge): Recursively merges two or more hashes together, normalises keys with differing use of dashes and underscores.
 * [`mysql::password`](#mysql--password): Hash a string as mysql's "PASSWORD()" function would do it
 * [`mysql::strip_hash`](#mysql--strip_hash): When given a hash this function strips out all blank entries.
@@ -707,7 +708,7 @@ Data type: `Optional[String[1]]`
 
 The provider to use to manage the service. For Ubuntu, defaults to 'upstart'; otherwise, default is undefined.
 
-Default value: `$mysql::params::server_service_provider`
+Default value: `undef`
 
 ##### <a name="-mysql--server--create_root_user"></a>`create_root_user`
 
@@ -1158,8 +1159,8 @@ The following parameters are available in the `mysql::db` defined type:
 ##### <a name="-mysql--db--name"></a>`name`
 
 The name of the database to create. Database names must:
-  * be longer than 64 characters.
-  * not contain / \ or . characters.
+  * not be longer than 64 characters.
+  * not contain '/' '\' or '.' characters.
   * not contain characters that are not permitted in file names.
   * not end with space characters.
 
@@ -1197,7 +1198,7 @@ Data type: `String[1]`
 
 The character set for the database. Must have the same value as collate to avoid corrective changes. See https://dev.mysql.com/doc/refman/8.0/en/charset-mysql.html for charset and collation pairs.
 
-Default value: `'utf8'`
+Default value: `'utf8mb3'`
 
 ##### <a name="-mysql--db--collate"></a>`collate`
 
@@ -1205,7 +1206,7 @@ Data type: `String[1]`
 
 The collation for the database. Must have the same value as charset to avoid corrective changes. See https://dev.mysql.com/doc/refman/8.0/en/charset-mysql.html for charset and collation pairs.
 
-Default value: `'utf8_general_ci'`
+Default value: `'utf8mb3_general_ci'`
 
 ##### <a name="-mysql--db--host"></a>`host`
 
@@ -1281,9 +1282,58 @@ Default value: `undef`
 
 ## Resource types
 
+### <a name="mysql_database"></a>`mysql_database`
+
+Manage a MySQL database.
+
+#### Properties
+
+The following properties are available in the `mysql_database` type.
+
+##### `charset`
+
+Valid values: `%r{^\S+$}`
+
+The CHARACTER SET setting for the database
+
+Default value: `utf8`
+
+##### `collate`
+
+Valid values: `%r{^\S+$}`
+
+The COLLATE setting for the database
+
+Default value: `utf8_general_ci`
+
+##### `ensure`
+
+Valid values: `present`, `absent`
+
+The basic property that the resource should be in.
+
+Default value: `present`
+
+#### Parameters
+
+The following parameters are available in the `mysql_database` type.
+
+* [`name`](#-mysql_database--name)
+* [`provider`](#-mysql_database--provider)
+
+##### <a name="-mysql_database--name"></a>`name`
+
+namevar
+
+The name of the MySQL database to manage.
+
+##### <a name="-mysql_database--provider"></a>`provider`
+
+The specific backend to use for this `mysql_database` resource. You will seldom need to specify this --- Puppet will
+usually discover the appropriate provider for your platform.
+
 ### <a name="mysql_grant"></a>`mysql_grant`
 
-@summary
 Manage a MySQL user's rights.
 
 #### Properties
@@ -1483,7 +1533,6 @@ usually discover the appropriate provider for your platform.
 
 ### <a name="mysql_user"></a>`mysql_user`
 
-@summary
 Manage a MySQL user. This includes management of users password as well as privileges.
 
 #### Properties
@@ -1557,6 +1606,49 @@ The specific backend to use for this `mysql_user` resource. You will seldom need
 discover the appropriate provider for your platform.
 
 ## Functions
+
+### <a name="mysql--innobackupex_args"></a>`mysql::innobackupex_args`
+
+Type: Ruby 4.x API
+
+This function populates and returns the string of arguments which later gets injected in template. Arguments that return string holds is conditional and decided by the the input given to function.
+
+#### `mysql::innobackupex_args(Optional[String] $backupuser, Boolean $backupcompress, Optional[Variant[String, Sensitive[String]]] $backuppassword_unsensitive, Array[String[1]] $backupdatabases, Array[String[1]] $optional_args)`
+
+The mysql::innobackupex_args function.
+
+Returns: `Variant[String]` String
+Generated on the basis of provided values.
+
+##### `backupuser`
+
+Data type: `Optional[String]`
+
+The user to use for the backup.
+
+##### `backupcompress`
+
+Data type: `Boolean`
+
+If the backup should be compressed.
+
+##### `backuppassword_unsensitive`
+
+Data type: `Optional[Variant[String, Sensitive[String]]]`
+
+The password to use for the backup.
+
+##### `backupdatabases`
+
+Data type: `Array[String[1]]`
+
+The databases to backup.
+
+##### `optional_args`
+
+Data type: `Array[String[1]]`
+
+Additional arguments to pass to innobackupex.
 
 ### <a name="mysql--normalise_and_deepmerge"></a>`mysql::normalise_and_deepmerge`
 
