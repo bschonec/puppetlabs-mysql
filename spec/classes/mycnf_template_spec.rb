@@ -81,6 +81,8 @@ describe 'mysql::server' do
 
         it 'makes the directory' do
           expect(subject).to contain_file('/etc/my.cnf.d').with(ensure: :directory,
+                                                                recurse: false,
+                                                                purge: false,
                                                                 mode: '0755')
         end
 
@@ -92,6 +94,8 @@ describe 'mysql::server' do
 
         it 'shouldnt contain the directory' do
           expect(subject).not_to contain_file('mysql-config-file').with(ensure: :directory,
+                                                                        recurse: false,
+                                                                        purge: false,
                                                                         mode: '0755')
         end
 
