@@ -84,6 +84,8 @@
 #   Optional hash of databases to create, which are passed to [mysql_database](#mysql_database).
 # @param reload_on_config_change
 #   By default, a my.cnf change won't reload/restart the database. Turn this flag to true to enable it
+# @param plugins
+#   A hash of plugins to load and optionally configure.
 # @param enabled
 #   _Deprecated_
 # @param manage_service
@@ -126,6 +128,7 @@ class mysql::server (
   Hash                                                                  $grants                  = {},
   Hash                                                                  $databases               = {},
   Boolean                                                               $reload_on_config_change = false,
+  Hash                                                                  $plugins                 = {},
   # Deprecated parameters
   Optional[Variant[String[1], Boolean]]        $enabled                 = undef,
   Optional[Variant[String[1], Boolean]]        $manage_service          = undef,
